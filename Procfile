@@ -1,1 +1,1 @@
-worker: python parsLesson.py
+worker: python lesson_pars.py
