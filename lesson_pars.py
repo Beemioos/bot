@@ -9,7 +9,7 @@ b_url = 'https://volit.ru/p/2784'
 
 
 def parser():
-    global all,groups, pars, auds,predmety
+    global all,groups, pars, auds,predmety,prepody
     session = requests.Session()
     request = session.get(b_url, headers=headers)
 
@@ -23,8 +23,11 @@ def parser():
 
         auds = table.find_all('td', attrs={'width': '66'})
 
-        predmety = table.find_all('td', attrs={'width': '340'})
-    return groups, pars, auds,predmety
+        predmety = table.find_all('td', attrs={'width': '331'})
+
+        prepody = table.find_all('td', attrs={'width': '180'})
+
+    return groups, pars, auds, prepody, predmety
 parser()
 
 
@@ -35,6 +38,13 @@ def cleaning():
     for group, value in enumerate(groups):
         groupp[group] = value.text
     groupp.pop(0)
+
+    # препод
+    prepodd = {}
+
+    for prepod, value1 in enumerate(prepody):
+        prepodd[prepod] = value1.text
+    prepodd.pop(0)
 
     # Кабинет
     audd = {}
@@ -54,12 +64,14 @@ def cleaning():
     for para, value1 in enumerate(pars):
         paraa[para] = value1.text
     paraa.pop(0)
+
+
     # output
     allss = {}
-    for (key1, value1), (key2, value2), (key3, value3), (key4,value4) in zip(groupp.items(), paraa.items(), predmett.items(),audd.items()):
+    for (key1, value1), (key2, value2), (key3, value3), (key4,value4), (key5,value5) in zip(groupp.items(), paraa.items(), predmett.items(),audd.items(),prepodd.items()):
         if paraa.keys() == predmett.keys():
-            allss[value1] = ('Номер:' + value2, 'Пара:' + value3, 'Кабинет:' + str(value4))
-    unique_dict = {key: (val[0].replace('\n', '-'), val[1].replace('\n', ','), val[2].replace('\n', ',')) for key, val in allss.items()}
+            allss[value1] = ('Номер:' + value2, 'Пара:' + value3, 'Кабинет:' + str(value4), 'Препод:' + str(value5))
+    unique_dict = {key: (val[0].replace('\n', '-'), val[1].replace('\n', ','), val[2].replace('\n', ','), val[3].replace('\n', ',')) for key, val in allss.items()}
     unique_dict = {key.replace('\n', ','): value for key, value in unique_dict.items()}
     print('Работа')
     global transformed_data
@@ -69,6 +81,7 @@ def cleaning():
         for item in value:
             field, data = item.split(':')
             transformed_data[key][field] = data
+    print(transformed_data)
 cleaning()
 # ////////////////////////////////////////////////////
 # ////////////////////////////////////////////////////////
@@ -94,9 +107,10 @@ def show_schedule(message):
     if message.text in transformed_data:
         pairs = transformed_data[message.text]['Пара'].split(',')
         rooms = transformed_data[message.text]['Кабинет'].split(',')
+        lern = transformed_data[message.text]['Препод'].split(',')
         response = f"{message.text}\n"
         for i in range(len(pairs)):
-            response += f"{transformed_data[message.text]['Номер'].split('-')[i]} {pairs[i]} {rooms[i]}\n"
+            response += f"{transformed_data[message.text]['Номер'].split('-')[i]}) {pairs[i]} || {rooms[i]} || {lern[i]}\n"
         bot.send_message(message.chat.id, response)
     else:
         bot.send_message(message.chat.id, "Выберите группу из списка.")
